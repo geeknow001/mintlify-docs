@@ -1,72 +1,281 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
-  "name": "Mintlify Starter Kit",
+  "name": "magic API 文档",
   "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
+    "primary": "#1f6feb",
+    "light": "#ffffff",
+    "dark": "#0d1117"
   },
-  "favicon": "/favicon.svg",
-  "navigation": {
-    "pages": [
-      {
-        "group": "Getting Started",
-        "pages": [
-          "index",
-          "quickstart"
-        ]
+  "api": {
+    "url": "full",
+    "mdx": {
+      "server": "https://magic666.top",
+      "auth": {
+        "method": "bearer"
       }
-    ],
-    "global": {
-      "anchors": [
-        {
-          "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
-          "icon": "book-open-cover"
-        },
-        {
-          "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
-          "icon": "newspaper"
-        }
-      ]
     }
   },
-  "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
+  "navigation": {
+    "groups": [
+      {
+        "group": "概览",
+        "pages": [
+          "index"
+        ]
+      },
+      {
+        "group": "文本系列",
+        "pages": [
+          "api-reference/texts/overview",
+          "api-reference/texts/model-matrix",
+          "api-reference/texts/image-inputs",
+          "api-reference/texts/chat-completions-stream",
+          "api-reference/texts/chat-completions-non-stream",
+          "api-reference/texts/claude-messages",
+          "api-reference/texts/gemini-native",
+          "api-reference/texts/openai-responses",
+          "api-reference/texts/parameter-tests",
+          "api-reference/texts/models",
+          "api-reference/texts/completions",
+          "api-reference/texts/realtime"
+        ]
+      },
+      {
+        "group": "图像系列",
+        "pages": [
+          "api-reference/images/overview",
+          "api-reference/images/model-matrix",
+          {
+            "group": "Gemini 图像生成",
+            "expanded": true,
+            "pages": [
+              "api-reference/images/gemini-image/generation",
+              "api-reference/images/gemini-3.1-flash-lite-image/generation"
+            ]
+          },
+          {
+            "group": "gpt-image-2",
+            "expanded": true,
+            "pages": [
+              "api-reference/images/gpt-image-2/generation"
+            ]
+          },
+          {
+            "group": "gpt-image-2-pro",
+            "expanded": true,
+            "pages": [
+              "api-reference/images/gpt-image-2-pro/generation"
+            ]
+          },
+          {
+            "group": "gpt-image-2-vip",
+            "expanded": true,
+            "pages": [
+              "api-reference/images/gpt-image-2-vip/generation"
+            ]
+          },
+          {
+            "group": "图像异步生成",
+            "expanded": true,
+            "pages": [
+              "api-reference/images/gpt-image-async/generation",
+              "api-reference/images/gpt-image-async/query"
+            ]
+          },
+          {
+            "group": "OpenAI OG",
+            "expanded": true,
+            "pages": [
+              "api-reference/images/openai-og/overview",
+              "api-reference/images/openai-og/generation",
+              "api-reference/images/openai-og/query"
+            ]
+          },
+          {
+            "group": "Gemini GG",
+            "expanded": true,
+            "pages": [
+              "api-reference/images/gemini-gg/overview",
+              "api-reference/images/gemini-gg/generation",
+              "api-reference/images/gemini-gg/query"
+            ]
+          },
+          {
+            "group": "Doubao Seedream",
+            "expanded": true,
+            "pages": [
+              "api-reference/images/doubao-seedream/generation"
+            ]
+          },
+          {
+            "group": "Midjourney",
+            "expanded": true,
+            "pages": [
+              "api-reference/images/midjourney/overview",
+              "api-reference/images/midjourney/submit",
+              "api-reference/images/midjourney/query"
+            ]
+          },
+          {
+            "group": "OpenAI Images 兼容",
+            "expanded": true,
+            "pages": [
+              "api-reference/images/gpt-image-1/overview",
+              "api-reference/images/gpt-image-1/generation",
+              "api-reference/images/gpt-image-1/edit"
+            ]
+          }
+        ]
+      },
+      {
+        "group": "视频系列",
+        "pages": [
+          "api-reference/videos/overview",
+          "api-reference/videos/model-matrix",
+          {
+            "group": "MiniMax H3",
+            "expanded": true,
+            "pages": [
+              "api-reference/videos/minimax-h3/overview",
+              "api-reference/videos/minimax-h3/generation",
+              "api-reference/videos/minimax-h3/query"
+            ]
+          },
+          {
+            "group": "manxue-2.5",
+            "expanded": true,
+            "pages": [
+              "api-reference/videos/manxue-2.5/overview",
+              "api-reference/videos/manxue-2.5/generation",
+              "api-reference/videos/manxue-2.5/query"
+            ]
+          },
+          {
+            "group": "Omni 视频",
+            "expanded": true,
+            "pages": [
+              "api-reference/videos/omni/overview",
+              "api-reference/videos/omni/omni-fast",
+              "api-reference/videos/omni/omni-fast-v2v"
+            ]
+          },
+          {
+            "group": "Seedance 2.0",
+            "expanded": true,
+            "pages": [
+              "api-reference/videos/seedance-2/overview",
+              "api-reference/videos/seedance-2/generation",
+              "api-reference/videos/seedance-2/query",
+              "api-reference/videos/seedance-2/asset-create-media",
+              "api-reference/videos/seedance-2/asset-get"
+            ]
+          },
+          {
+            "group": "特惠渠道系列",
+            "expanded": true,
+            "pages": [
+              "api-reference/videos/special-offer/overview",
+              "api-reference/videos/special-offer/generation",
+              "api-reference/videos/special-offer/query"
+            ]
+          },
+          {
+            "group": "Seedance 1.5",
+            "expanded": true,
+            "pages": [
+              "api-reference/videos/seedance/overview",
+              "api-reference/videos/seedance/doubao-seedance-1-5-pro",
+              "api-reference/videos/seedance/query"
+            ]
+          },
+          {
+            "group": "国产视频模型",
+            "expanded": true,
+            "pages": [
+              "api-reference/videos/aigc/overview",
+              "api-reference/videos/aigc/generation",
+              "api-reference/videos/aigc/query"
+            ]
+          },
+          {
+            "group": "Sora 视频",
+            "expanded": true,
+            "pages": [
+              "api-reference/videos/sora/overview",
+              "api-reference/videos/sora/generation",
+              "api-reference/videos/sora/query"
+            ]
+          },
+          {
+            "group": "Veo 视频",
+            "expanded": true,
+            "pages": [
+              "api-reference/videos/veo/overview",
+              "api-reference/videos/veo/generation",
+              "api-reference/videos/veo/query"
+            ]
+          },
+          {
+            "group": "Grok 视频",
+            "expanded": true,
+            "pages": [
+              "api-reference/videos/grok/overview",
+              "api-reference/videos/grok/grok-imagine-video",
+              "api-reference/videos/grok/grok-imagine-video-1-5-preview",
+              "api-reference/videos/grok/query"
+            ]
+          }
+        ]
+      },
+      {
+        "group": "上传管理",
+        "pages": [
+          "api-reference/uploads/overview",
+          "api-reference/uploads/image-upload"
+        ]
+      },
+      {
+        "group": "任务管理",
+        "pages": [
+          "api-reference/tasks/overview"
+        ]
+      },
+      {
+        "group": "账户管理",
+        "pages": [
+          "api-reference/account/overview",
+          "api-reference/account/authentication",
+          "api-reference/account/billing"
+        ]
+      }
+    ]
   },
   "navbar": {
     "links": [
       {
-        "label": "Support",
-        "href": "mailto:hi@mintlify.com"
+        "label": "文本系列",
+        "href": "/api-reference/texts/overview"
+      },
+      {
+        "label": "图像系列",
+        "href": "/api-reference/images/overview"
+      },
+      {
+        "label": "视频系列",
+        "href": "/api-reference/videos/overview"
+      },
+      {
+        "label": "任务管理",
+        "href": "/api-reference/tasks/overview"
+      },
+      {
+        "label": "账户管理",
+        "href": "/api-reference/account/overview"
       }
-    ],
-    "primary": {
-      "type": "button",
-      "label": "Dashboard",
-      "href": "https://app.mintlify.com"
-    }
-  },
-  "contextual": {
-    "options": [
-      "copy",
-      "view",
-      "chatgpt",
-      "claude",
-      "perplexity",
-      "mcp",
-      "cursor",
-      "vscode"
     ]
   },
   "footer": {
-    "socials": {
-      "x": "https://x.com/mintlify",
-      "github": "https://github.com/mintlify",
-      "linkedin": "https://linkedin.com/company/mintlify"
-    }
+    "socials": {}
   }
 }

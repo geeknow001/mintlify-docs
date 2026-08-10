@@ -1,0 +1,288 @@
+---
+title: OpenAI Responses 接口
+description: 使用 OpenAI Responses API 格式创建响应，支持多模态输入、工具调用、流式输出和上下文压缩。
+api: "POST /v1/responses"
+---
+
+# OpenAI Responses 接口
+
+Responses API 是面向多模态、工具调用和结构化输出的统一响应接口。相比 Chat Completions，它的输入、输出和工具调用结构更适合复杂任务编排。新项目如果没有强依赖旧 Chat Completions 请求体，建议优先评估该接口。
+
+## 请求体
+
+<ParamField body="model" type="string" required>
+模型名称。
+</ParamField>
+
+<ParamField body="input" type="string | array<object>">
+用户输入。可以是字符串，也可以是结构化消息数组；部分上游能力组合会要求使用结构化数组。
+</ParamField>
+
+<ParamField body="instructions" type="string">
+开发者或系统级指令。
+</ParamField>
+
+<ParamField body="previous_response_id" type="string">
+上一轮响应 ID。仅在上游和当前通道支持 Responses 会话续接时可用；当前 HTTP 路径不应依赖该字段做通用上下文管理。
+</ParamField>
+
+<ParamField body="tools" type="array<object>">
+工具列表。支持函数工具，也可转发上游兼容的内置工具。
+</ParamField>
+
+<ParamField body="tool_choice" type="string | object">
+工具选择策略。
+</ParamField>
+
+<ParamField body="max_output_tokens" type="integer">
+最大输出 token 数。不同模型和通道对该字段支持程度不同；如果返回空文本或上游报不支持，请调高限制或去掉该字段后重试。
+</ParamField>
+
+<ParamField body="reasoning" type="object">
+推理配置，例如 `{ "effort": "low" }`、`{ "effort": "medium" }`、`{ "effort": "high" }`、`{ "effort": "xhigh" }`。官方支持值还包括 `none` 和 `minimal`，但具体可用范围取决于模型。
+</ParamField>
+
+<ParamField body="text" type="object">
+文本输出配置，常用于 JSON Schema 结构化输出，也可包含支持模型的输出风格字段，例如 `verbosity`。
+</ParamField>
+
+<ParamField body="stream" type="boolean">
+是否启用 SSE 流式输出。
+</ParamField>
+
+<ParamField body="stream_options.include_obfuscation" type="boolean">
+OpenAI Responses 原生流式选项，用于控制流式事件中的 `obfuscation` 字段。不要把 Chat Completions 的 `stream_options.include_usage` 直接套到 Responses；用量通常随 `response.completed` 等事件返回，是否出现取决于上游。
+</ParamField>
+
+<ParamField body="store" type="boolean">
+控制上游是否存储请求和响应。该字段默认允许转发，可由渠道设置禁用。
+</ParamField>
+
+<ParamField body="metadata" type="object">
+业务侧附加元数据。
+</ParamField>
+
+<ParamField body="include" type="array<string>">
+请求响应中额外包含的字段，具体取值取决于上游实现。
+</ParamField>
+
+## 请求示例
+
+<RequestExample>
+
+```bash
+curl -X POST https://magic666.top/v1/responses \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gpt-5.5",
+    "instructions": "你是一个简洁的技术助手。",
+    "input": "用三句话解释 Responses API 适合什么场景。",
+    "reasoning": { "effort": "low" }
+  }'
+```
+
+</RequestExample>
+
+### 多模态输入
+
+图片 URL 放在 `input_image.image_url`。如果传 base64，使用 `data:image/png;base64,...` 形式；具体是否支持取决于模型和通道，生产前请用当前 API Key 验证。
+
+```bash
+curl -X POST https://magic666.top/v1/responses \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gpt-5.5",
+    "input": [
+      {
+        "role": "user",
+        "content": [
+          { "type": "input_text", "text": "提取这张截图中的异常指标。" },
+          { "type": "input_image", "image_url": "https://YOUR_IMAGE_HOST/path/dashboard.png", "detail": "high" }
+        ]
+      }
+    ]
+  }'
+```
+
+### 工具调用
+
+```bash
+curl -X POST https://magic666.top/v1/responses \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gpt-5.5",
+    "input": "北京今天适合户外跑步吗？",
+    "tools": [
+      {
+        "type": "function",
+        "name": "get_weather",
+        "description": "获取城市天气",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "city": { "type": "string" }
+          },
+          "required": ["city"]
+        }
+      }
+    ],
+    "tool_choice": "auto"
+  }'
+```
+
+### 流式输出
+
+```bash
+curl -N -X POST https://magic666.top/v1/responses \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gpt-5.5",
+    "input": "写一个 5 行以内的产品发布公告。",
+    "stream": true
+  }'
+```
+
+base64 写法：
+
+```json
+{
+  "type": "input_image",
+  "image_url": "data:image/png;base64,BASE64_IMAGE_DATA"
+}
+```
+
+## 响应示例
+
+<ResponseExample>
+
+```json 200 - 非流式
+{
+  "id": "resp_abc123",
+  "object": "response",
+  "created_at": 1735689600,
+  "status": "completed",
+  "model": "gpt-5.5",
+  "output": [
+    {
+      "type": "message",
+      "id": "msg_abc123",
+      "status": "completed",
+      "role": "assistant",
+      "content": [
+        {
+          "type": "output_text",
+          "text": "Responses API 适合多模态输入、工具调用和需要上下文续接的任务。它把输出拆成结构化 item，便于程序读取。通过统一网关可以复用同一套认证、计费和渠道分发能力。",
+          "annotations": []
+        }
+      ]
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 26,
+    "completion_tokens": 62,
+    "total_tokens": 88
+  }
+}
+```
+
+```text 200 - 流式
+event: response.created
+data: {"type":"response.created","response":{"id":"resp_abc123","object":"response","status":"in_progress","model":"gpt-5.5"}}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","delta":"Responses"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","delta":" API"}
+
+event: response.completed
+data: {"type":"response.completed","response":{"id":"resp_abc123","status":"completed","usage":{"prompt_tokens":26,"completion_tokens":62,"total_tokens":88}}}
+```
+
+```json 400
+{
+  "error": {
+    "message": "model is required",
+    "type": "invalid_request_error",
+    "param": "",
+    "code": "invalid_request"
+  }
+}
+```
+
+```json 401
+{
+  "error": {
+    "message": "Invalid API key provided",
+    "type": "invalid_request_error",
+    "param": "",
+    "code": "invalid_api_key"
+  }
+}
+```
+
+```json 402
+{
+  "error": {
+    "message": "用户额度不足",
+    "type": "new_api_error",
+    "param": "",
+    "code": "insufficient_user_quota"
+  }
+}
+```
+
+```json 429
+{
+  "error": {
+    "message": "当前请求频率过高，请稍后再试",
+    "type": "new_api_error",
+    "param": "",
+    "code": "too_many_requests"
+  }
+}
+```
+
+```json 500
+{
+  "error": {
+    "message": "bad response body",
+    "type": "new_api_error",
+    "param": "",
+    "code": "bad_response_body"
+  }
+}
+```
+
+</ResponseExample>
+
+## 上下文压缩
+
+```http
+POST /v1/responses/compact
+```
+
+用于把较长上下文压缩成适合后续继续对话的摘要。请求结构与 `/v1/responses` 接近，常用字段为 `model`、`input`、`instructions`、`previous_response_id`。
+
+```bash
+curl -X POST https://magic666.top/v1/responses/compact \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gpt-5.5",
+    "instructions": "压缩成后续对话可继续使用的上下文，保留决策、约束和待办。",
+    "input": [
+      { "role": "user", "content": "第一轮需求..." },
+      { "role": "assistant", "content": "第一轮方案..." }
+    ]
+  }'
+```
+
+## 相关接口
+
+- [Chat Completions（非流式）](./chat-completions-non-stream)
+- [Chat Completions（流式）](./chat-completions-stream)

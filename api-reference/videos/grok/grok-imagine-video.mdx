@@ -1,0 +1,236 @@
+---
+title: Grok Imagine Video
+description: 使用 `POST /v1/videos` 调用 `grok-imagine-video` 提交 JSON 视频生成任务。
+api: "POST /v1/videos"
+---
+
+# Grok Imagine Video
+
+`grok-imagine-video` 是 Grok Imagine 线路的视频生成模型。该模型使用 `application/json` 创建任务，适合不希望使用 multipart 上传文件的接入方。
+
+- 接口路径是 `POST /v1/videos`。
+- 请求格式是 `application/json`。
+- 文生视频只需要 `model`、`prompt`、`seconds`、`aspect_ratio`、`resolution`。
+- 图生视频单图使用 `image`，多图使用 `images`。
+- `resolution` 支持 `480P` 和 `720P`，也兼容 `480` / `720`。
+- `prompt` 最多支持 `4096` 个字符；过长或过密的提示词可能导致上游没有返回任务 ID。
+
+## 方法与路径
+
+```http
+POST /v1/videos
+```
+
+<RequestExample>
+
+```bash 文生视频 cURL
+curl -X POST https://magic666.top/v1/videos \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "grok-imagine-video",
+    "prompt": "清晨的城市街道，阳光穿过树叶，镜头缓慢向前移动",
+    "seconds": "8",
+    "aspect_ratio": "16:9",
+    "resolution": "720P"
+  }'
+```
+
+```bash 单图生视频 cURL
+curl -X POST https://magic666.top/v1/videos \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "grok-imagine-video",
+    "prompt": "让参考图中的人物自然转身，背景保持柔和景深",
+    "seconds": "6",
+    "aspect_ratio": "9:16",
+    "resolution": "720P",
+    "image": "data:image/png;base64,BASE64_IMAGE_DATA"
+  }'
+```
+
+```bash 多图参考 cURL
+curl -X POST https://magic666.top/v1/videos \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "grok-imagine-video",
+    "prompt": "参考多张图片的主体特征，生成一段连贯的产品展示视频",
+    "seconds": "10",
+    "aspect_ratio": "16:9",
+    "resolution": "720P",
+    "images": [
+      "data:image/png;base64,FIRST_IMAGE_BASE64",
+      "data:image/png;base64,SECOND_IMAGE_BASE64"
+    ]
+  }'
+```
+
+```python Python
+import base64
+import requests
+
+def to_data_url(path, mime="image/png"):
+    with open(path, "rb") as f:
+        encoded = base64.b64encode(f.read()).decode("ascii")
+    return f"data:{mime};base64,{encoded}"
+
+resp = requests.post(
+    "https://magic666.top/v1/videos",
+    headers={
+        "Authorization": "Bearer YOUR_API_KEY",
+        "Content-Type": "application/json",
+    },
+    json={
+        "model": "grok-imagine-video",
+        "prompt": "让参考图中的人物向镜头微笑，头发和衣摆轻微摆动",
+        "seconds": "6",
+        "aspect_ratio": "16:9",
+        "resolution": "720P",
+        "image": to_data_url("reference.png"),
+    },
+    timeout=60,
+)
+
+print(resp.json())
+```
+
+```javascript JavaScript
+const response = await fetch("https://magic666.top/v1/videos", {
+  method: "POST",
+  headers: {
+    Authorization: "Bearer YOUR_API_KEY",
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    model: "grok-imagine-video",
+    prompt: "让参考图中的人物向镜头微笑，头发和衣摆轻微摆动",
+    seconds: "6",
+    aspect_ratio: "16:9",
+    resolution: "720P",
+    image: "data:image/png;base64,BASE64_IMAGE_DATA",
+  }),
+});
+
+console.log(await response.json());
+```
+
+</RequestExample>
+
+## 响应示例
+
+<ResponseExample>
+
+```json 200
+{
+  "id": "task_abc123",
+  "task_id": "task_abc123",
+  "object": "video",
+  "model": "grok-imagine-video",
+  "status": "queued",
+  "progress": 0,
+  "created_at": 1735689600,
+  "seconds": "6",
+  "size": "720x1280"
+}
+```
+
+```json 400
+{
+  "error": {
+    "message": "prompt is required",
+    "type": "new_api_error",
+    "param": "prompt",
+    "code": "invalid_request"
+  }
+}
+```
+
+</ResponseExample>
+
+## 认证
+
+```http
+Authorization: Bearer YOUR_API_KEY
+```
+
+## Body
+
+<ParamField body="model" type="string" required>
+固定传 `grok-imagine-video`。
+</ParamField>
+
+<ParamField body="prompt" type="string" required>
+视频生成提示词。最多 `4096` 个字符。
+</ParamField>
+
+<ParamField body="seconds" type="string">
+目标秒数。最小为 `1` 秒；建议按字符串传入，例如 `"6"`。
+</ParamField>
+
+<ParamField body="aspect_ratio" type="string">
+宽高比。支持常见预设 `1:1`、`16:9`、`9:16`、`4:3`、`3:4`、`3:2`、`2:3`、`2:1`、`1:2`、`19.5:9`、`9:19.5`、`20:9`、`9:20`，也支持 `数字:数字` 的自定义比例。
+</ParamField>
+
+<ParamField body="resolution" type="string">
+输出清晰度。支持 `480P`、`720P`，也兼容 `480`、`720` 写法。
+</ParamField>
+
+<ParamField body="image" type="string">
+单张参考图。使用 `data:image/png;base64,...` 这类 data URI。传入 `image` 时不要同时传 `images`。
+</ParamField>
+
+<ParamField body="images" type="array<string>">
+多张参考图。数组成员使用 `data:image/png;base64,...` 这类 data URI。传多张图时不要同时传 `image`。
+</ParamField>
+
+## 请求构造规则
+
+| 场景 | 字段组合 |
+| --- | --- |
+| 文生视频 | `model`、`prompt`、`seconds`、`aspect_ratio`、`resolution` |
+| 单图生视频 | 在文生字段基础上追加 `image` |
+| 多图参考 | 在文生字段基础上追加 `images`，数组内每一项为 data URI |
+
+客户端如从本地文件构造 JSON 请求，应先读取图片二进制并转为 Base64 data URI，再写入 `image` 或 `images`。不要把本地文件路径直接作为 JSON 图片字段提交。
+
+## Response
+
+<ResponseField name="id" type="string">
+任务 ID。后续用 `GET /v1/videos/{id}` 查询结果。
+</ResponseField>
+
+<ResponseField name="task_id" type="string">
+任务 ID。部分响应会同时返回 `id` 与 `task_id`，两者可指向同一个任务。
+</ResponseField>
+
+<ResponseField name="object" type="string">
+对象类型，通常为 `video`。
+</ResponseField>
+
+<ResponseField name="model" type="string">
+实际提交的模型名。
+</ResponseField>
+
+<ResponseField name="status" type="string">
+任务状态，常见值有 `queued`、`processing`、`completed`、`failed`、`cancelled`。
+</ResponseField>
+
+<ResponseField name="progress" type="integer">
+任务进度百分比。
+</ResponseField>
+
+<ResponseField name="video_url" type="string">
+任务完成后的视频地址。也可以使用 `GET /v1/videos/{task_id}/content` 下载结果。
+</ResponseField>
+
+## 错误处理建议
+
+如果创建任务返回 `5xx`，且错误信息包含 `task_id is empty`，通常表示上游没有接受本次任务。常见触发原因包括提示词过长、分镜描述过密或上游临时拒绝创建任务。建议客户端记录当前 `prompt` 的字符数与字节数，并在重试前压缩提示词。
+
+## 相关接口
+
+- [Grok 视频概览](./overview)
+- [Grok Imagine 1.5 Preview](./grok-imagine-video-1-5-preview)
+- [Grok 任务查询](./query)

@@ -1,0 +1,260 @@
+---
+title: 视频模型支持矩阵
+description: 汇总当前视频模型系列的推荐入口、生成模式、参考素材传递方式和时长限制。
+---
+
+# 视频模型支持矩阵
+
+这张表汇总当前视频模型系列的主入口、常见模式和参考素材传递方式。
+
+## 模型总表
+
+| 模型家族 | 代表模型 | 文档页面 | 推荐入口 | 常用模式 | 参考素材传法 |
+| --- | --- | --- | --- | --- | --- |
+| Sora | `sora-2` | [概览](/api-reference/videos/sora/overview) | `/v1/videos` | 文生视频、首帧生视频 | JSON `input_reference` |
+| Veo | `veo_3_1`、`veo_3_1-fast` | [概览](/api-reference/videos/veo/overview) | `/v1/videos` | 文生视频、首尾帧、参考生视频 | JSON `input_reference` |
+| Grok Imagine | `grok-imagine-video`、`grok-imagine-video-1.5-preview` | [概览](/api-reference/videos/grok/overview) | `/v1/videos` | 文生视频、图生视频、参考图视频 | JSON `image` / `images`；1.5 Preview 当前使用单图 |
+| Omni | `omni-fast`、`omni-fast-v2v` | [概览](/api-reference/videos/omni/overview) | `/v1/videos` | 文生视频、图生视频、首尾帧、多参考图、参考视频编辑 | JSON `first_image_url` / `last_image_url` / `images` / `video` |
+| MiniMax H3 | `minimax-h3-768p`、`minimax-h3-2k`、`minimax-h3-pro-768p`、`minimax-h3-pro-2k` | [概览](/api-reference/videos/minimax-h3/overview) | `/v1/videos` | 文生视频、图生视频、首尾帧、参考音频、Pro 参考视频 | JSON `referenceImages` / `first_image` / `last_image` / `referenceAudios` / `referenceVideos`；普通档是 `503`，Pro 档是 `913` |
+| manxue-2.5 | `manxue-2.5` | [概览](/api-reference/videos/manxue-2.5/overview) | `/v1/videos` | 文生视频、多参考图、参考视频、参考音频 | JSON `referenceImages` / `referenceVideos` / `referenceAudios` |
+| 国产视频模型（AIGC） | `Vidu-*`、`Kling-*`、`GV-*`、`OS-*`、`Hunyuan-*`、`Mingmou-*`、`Hailuo-*`、`SV-*`、`JV-*` | [概览](/api-reference/videos/aigc/overview) | `/v1/videos` | 文生、图生、参考图、参考视频、首尾帧、动作控制、数字人、对口型、模板特效 | JSON `image` / `images` / `input_reference` / `metadata` |
+| 特惠渠道系列 | `manxue-2.0` | [概览](/api-reference/videos/special-offer/overview) | `/v1/videos` | 文生视频、首帧生视频、首尾帧、参考图、参考音频 | JSON `content[].image_url` / `content[].audio_url` |
+| Seedance 2.0 | `doubao-seedance-2-0-260128`、`doubao-seedance-2-0-fast-260128` | [概览](/api-reference/videos/seedance-2/overview) | `/v1/videos` | 文生视频、首帧、尾帧、参考图、参考视频、参考音频 | JSON URL 字段 |
+| Seedance 1.5 | `doubao-seedance-1-5-pro_480p`、`doubao-seedance-1-5-pro_720p`、`doubao-seedance-1-5-pro_1080p` | [概览](/api-reference/videos/seedance/overview) | `/v1/videos` | 文生视频、首帧生视频、首尾帧 | multipart URL 字段 |
+
+## 分家族说明
+
+### Sora
+
+| 项目 | 说明 |
+| --- | --- |
+| 模型示例 | `sora-2` |
+| 推荐入口 | `POST /v1/videos` |
+| 文档页面 | [Sora 视频概览](/api-reference/videos/sora/overview) |
+| 常见字段 | `prompt`、`size`、`seconds`、`input_reference` |
+| 参考图 | JSON `input_reference` |
+| 尺寸 | 通过顶层 `size` 传入，例如 `1280x720`、`720x1280` |
+| 时长 | 通过 `seconds` 提交；具体可用值以当前上游和渠道配置为准 |
+
+### Veo
+
+| 项目 | 说明 |
+| --- | --- |
+| 模型示例 | `veo_3_1`、`veo_3_1-fast` |
+| 推荐入口 | `POST /v1/videos` |
+| 文档页面 | [Veo 视频概览](/api-reference/videos/veo/overview) |
+| 常见模式 | 文生视频、首尾帧、参考生视频 |
+| 参考图 | JSON `input_reference`，由服务端转换为 Veo 请求结构 |
+| 注意事项 | 参考生视频模式下，会优先约束为横屏思路，避免上游不兼容 |
+
+### 国产视频模型（AIGC）
+
+| 项目 | 说明 |
+| --- | --- |
+| 模型示例 | `Vidu-*`、`Kling-*`、`GV-*`、`OS-*`、`Hunyuan-*`、`Mingmou-*`、`Hailuo-*`、`SV-*`、`JV-*` |
+| 推荐入口 | `POST /v1/videos` |
+| 文档页面 | [国产视频模型概览](/api-reference/videos/aigc/overview) |
+| 常见字段 | `model`、`prompt`、`seconds`、`duration`、`size`、`image`、`images`、`metadata` |
+| 参考图 | 支持 `image`、`images`、`input_reference`，高级场景也可通过 `metadata.file_infos` 传入 |
+| 典型场景 | 文生视频、图生视频、参考图、参考视频、首尾帧、动作控制、数字人、对口型、模板特效 |
+
+### Grok Imagine
+
+| 项目 | 说明 |
+| --- | --- |
+| 模型示例 | `grok-imagine-video`、`grok-imagine-video-1.5-preview` |
+| 推荐入口 | `POST /v1/videos` |
+| 文档页面 | [Grok 视频概览](/api-reference/videos/grok/overview) |
+| 常见字段 | `prompt`、`seconds`、`aspect_ratio`、`resolution`、`image`、`images` |
+| 参考图 | JSON `image` / `images`，其中 `grok-imagine-video-1.5-preview` 使用单图 `image` |
+| 时长规则 | 支持自定义秒数，最小 `1s` |
+
+### Omni
+
+| 项目 | 说明 |
+| --- | --- |
+| 模型示例 | `omni-fast`、`omni-fast-v2v` |
+| 推荐入口 | `POST /v1/videos` |
+| 文档页面 | [Omni 视频模型概览](/api-reference/videos/omni/overview) |
+| `omni-fast` | JSON；支持文生、首帧图生、首尾帧、多参考图；`images` 最多 5 张 |
+| `omni-fast-v2v` | 在 `omni-fast` 基础上支持 `video` / `video_url` / `input_video` 参考视频，最大 15MB |
+| 下载建议 | 任务完成后优先使用 `GET /v1/videos/{task_id}/content` 下载 MP4 |
+
+### MiniMax H3
+
+| 项目 | 说明 |
+| --- | --- |
+| 模型示例 | `minimax-h3-768p`、`minimax-h3-2k`、`minimax-h3-pro-768p`、`minimax-h3-pro-2k` |
+| 兼容入口 | `minimax-h3`，按 `resolution`、`video_resolution` 或 `size` 分流到普通 768P / 2K 实际模型；不会自动分流到 Pro |
+| 推荐入口 | `POST /v1/videos` |
+| 文档页面 | [MiniMax H3 视频概览](/api-reference/videos/minimax-h3/overview) |
+| 普通 768P 档 | `minimax-h3-768p`；全能参考 `503`；适合草稿预览、批量生成、移动端分发和常规清晰度任务 |
+| 普通 2K 档 | `minimax-h3-2k`；全能参考 `503`；适合高清成片、大屏展示、细节保留和后期裁切 |
+| Pro 768P 档 | `minimax-h3-pro-768p`；全能参考 `913`；基础能力加参考视频 |
+| Pro 2K 档 | `minimax-h3-pro-2k`；全能参考 `913`；同上，2K 超清输出 |
+| 差异边界 | 普通档和 Pro 档的差异是参考视频；768P 和 2K 的差异是输出清晰度 |
+| 常见字段 | `prompt`、`duration`、`ratio`、`referenceImages`、`first_image`、`last_image`、`referenceAudios`、`referenceVideos` |
+| 清晰度 | `768P`、`2K`；未明确选择时默认按 `768P` 处理 |
+| 时长规则 | `duration` 支持 `4` 到 `15` 秒，整数秒，按秒计费 |
+| 画幅比例 | 当前项目支持 `16:9`、`9:16`、`1:1`、`21:9`、`4:3`、`3:4` |
+| 普通档参考素材 | `503`：最多 5 张参考图、0 段参考视频、3 段参考音频；参考音频需要搭配至少 1 张参考图 |
+| Pro 档参考素材 | `913`：最多 9 张参考图、1 段 2 到 5 秒参考视频、3 段参考音频；参考视频放在 `referenceVideos` |
+| 当前边界 | Pro 不单开系列；当前插件前端单入口 `minimax-h3` 不自动选择 Pro，直接接入时传真实 Pro 模型名 |
+
+### manxue-2.5
+
+| 项目 | 说明 |
+| --- | --- |
+| 模型示例 | `manxue-2.5` |
+| 推荐入口 | `POST /v1/videos` |
+| 文档页面 | [manxue-2.5 视频概览](/api-reference/videos/manxue-2.5/overview) |
+| 请求格式 | `application/json` |
+| 常见字段 | `model`、`prompt`、`duration`、`ratio`、`resolution`、`referenceImages`、`referenceVideos`、`referenceAudios` |
+| 时长规则 | `duration` 支持 `4` 到 `29` 秒，整数秒 |
+| 画幅比例 | `16:9`、`9:16`、`1:1`、`21:9` |
+| 清晰度 | `480p`、`720p` |
+| 参考图 | 顶层 `referenceImages`，最多 `30` 张公网图片 URL |
+| 参考视频 | 顶层 `referenceVideos`，最多 `10` 个公网视频 URL |
+| 参考音频 | 顶层 `referenceAudios`，最多 `10` 个公网音频 URL |
+| 参考素材字段 | `referenceImages`、`referenceVideos`、`referenceAudios` |
+
+### 特惠渠道系列
+
+| 项目 | 说明 |
+| --- | --- |
+| 模型示例 | `manxue-2.0` |
+| 推荐入口 | `POST /v1/videos` |
+| 文档页面 | [特惠渠道系列概览](/api-reference/videos/special-offer/overview) |
+| `manxue-2.0` | JSON 请求；`seconds` 支持 `4` 到 `15` 秒；`resolution` 支持 `480P`、`720P`；参考图放在 `content[].image_url.url`，用 `role` 标记 `first_frame`、`last_frame` 或 `reference_image`；参考音频放在 `content[].audio_url.url`，用 `role: "reference_audio"` 标记 |
+| 字段约束 | 使用 `application/json` 提交，不接收 Base64 data URI 作为参考图输入 |
+
+### Seedance 2.0
+
+| 项目 | 说明 |
+| --- | --- |
+| 模型示例 | `doubao-seedance-2-0-260128`、`doubao-seedance-2-0-fast-260128` |
+| 推荐入口 | `POST /v1/videos` |
+| 文档页面 | [Seedance 2.0 概览](/api-reference/videos/seedance-2/overview) |
+| 常见字段 | `prompt`、`duration`、`aspect_ratio`、`first_image`、`last_image`、`reference_image_urls`、`reference_video_url`、`reference_video_urls`、`reference_audios`、`reference_audio_urls`、`audio_url` |
+| 请求格式 | `application/json` |
+| 特别说明 | 素材字段传公网 URL 或 `asset://{asset_id}`；本地文件先转成服务端可访问的 URL |
+
+### Seedance 1.5
+
+| 项目 | 说明 |
+| --- | --- |
+| 模型示例 | `doubao-seedance-1-5-pro_480p`、`doubao-seedance-1-5-pro_720p`、`doubao-seedance-1-5-pro_1080p` |
+| 推荐入口 | `POST /v1/videos` |
+| 文档页面 | [Seedance 1.5 概览](/api-reference/videos/seedance/overview) |
+| 常见字段 | `prompt`、`seconds`、`size` |
+| 参考图 | multipart `first_frame_image`、`last_frame_image`，字段值为图片 URL |
+| 时长规则 | 当前时长限制在 `4` 到 `11` 秒之间 |
+| 注意事项 | 不适合“参考生视频”模式 |
+
+### 阿里 wan2.6
+
+| 项目 | 说明 |
+| --- | --- |
+| 模型示例 | `wan2.6-t2v:1280*720`、`wan2.6-t2v:1920*1080`、`wan2.6-i2v:1280*720`、`wan2.6-i2v:1920*1080` |
+| 推荐入口 | `POST /v1/videos` |
+| 文档页面 | [国产视频模型概览](/api-reference/videos/aigc/overview) |
+| 常见模式 | `t2v` 文生视频、`i2v` 图生视频 |
+| 分辨率 | 模型名里已经带固定分辨率档位 |
+| 参考图 | `i2v` 常见是单图输入 |
+
+### Vidu
+
+| 项目 | 说明 |
+| --- | --- |
+| 模型示例 | `Vidu-q3-pro`、`Vidu-q3-turbo` |
+| 推荐入口 | `POST /v1/videos` |
+| 文档页面 | [国产视频模型概览](/api-reference/videos/aigc/overview) |
+| 请求风格 | JSON |
+| 首帧图 | `image` |
+| 首尾帧 | `image` + `metadata.last_frame_url` |
+| 参考生视频 | `images` 最多常见 3 张 |
+
+### Kling
+
+| 项目 | 说明 |
+| --- | --- |
+| 模型示例 | `Kling-3.0`、`Kling-3.0-Omni` |
+| 推荐入口 | `POST /v1/videos` 或官方兼容路由 `/kling/v1/videos/*` |
+| 文档页面 | [国产视频模型概览](/api-reference/videos/aigc/overview) |
+| 请求风格 | JSON |
+| 常见字段 | `prompt`、`seconds`、`metadata.output_config` |
+| 参考图 | `image` |
+| 音频 | 可通过 `metadata.output_config.audio_generation` 控制 |
+
+### Hailuo
+
+| 项目 | 说明 |
+| --- | --- |
+| 模型示例 | `Hailuo-2.3`、`Hailuo-2.3-fast` |
+| 推荐入口 | `POST /v1/videos` |
+| 文档页面 | [国产视频模型概览](/api-reference/videos/aigc/overview) |
+| 请求风格 | JSON |
+| 常见字段 | `prompt`、`seconds`、`metadata.output_config.resolution` |
+| 参考图 | `image` |
+| 注意事项 | 不应依赖 `aspect_ratio`；当前更适合文生视频和首帧生视频 |
+
+## 生成模式支持
+
+| 模型家族 | 文生视频 | 首帧生视频 | 首尾帧 | 参考生视频 | 音频开关 |
+| --- | --- | --- | --- | --- | --- |
+| Sora | 支持 | 支持 | 部分场景依赖上游 | 部分场景通过多图参考实现 | 支持 |
+| Veo | 支持 | 可通过参考图实现 | 支持 | 支持 | 依赖上游 |
+| Grok Imagine | 支持 | 支持 | 依赖上游 | 支持 | 依赖上游 |
+| Omni | 支持 | 支持 | 支持 | `omni-fast` 支持参考图；`omni-fast-v2v` 支持参考视频 | 模型相关 |
+| MiniMax H3 | 支持 | 支持 | 支持 | 普通档支持参考图和参考音频；Pro 档额外支持 1 段 2 到 5 秒参考视频 | 原生音频能力，前端不透出关闭开关 |
+| manxue-2.5 | 支持 | 可通过 `referenceImages` 表达 | 可通过 `referenceImages` 加提示词表达 | 支持多参考图、最多 10 个参考视频和 10 个参考音频 | 模型相关 |
+| 特惠渠道系列 | 支持 | 支持 | 支持 | `manxue-2.0` 支持参考图和参考音频 | 模型相关 |
+| Seedance 2.0 | 支持 | 支持 | 支持 | 支持参考图、参考视频和参考音频 | 模型相关 |
+| Seedance 1.5 | 支持 | 支持 | 支持 | 建议使用首帧或首尾帧 | 依赖上游 |
+| 阿里 wan2.6 | 支持 | `i2v` 支持 | 依赖上游 | 依赖上游 | 依赖上游 |
+| Vidu | 支持 | 支持 | 支持 | 支持 | 依赖上游 |
+| Kling | 支持 | 支持 | 当前不建议作为标准能力承诺 | 不建议 | 支持 |
+| Hailuo | 支持 | 支持 | 不建议 | 不建议 | 依赖上游 |
+
+## 常见 `model` 值速查
+
+下面这张表补充前端模型描述和渠道模型映射里常见的具体 `model` 值，便于直接复制到请求体中。
+
+| `model` | 归属 | 说明 |
+| --- | --- | --- |
+| `manxue-2.0` | 特惠渠道系列 | JSON 请求；`seconds` 支持 `4` 到 `15` 秒；`resolution` 支持 `480P`、`720P`；参考图通过 `content[].image_url.url` 传入，参考音频通过 `content[].audio_url.url` 传入。 |
+| `manxue-2.5` | manxue-2.5 | JSON 请求；`duration` 支持 `4` 到 `29` 秒；`resolution` 支持 `480p`、`720p`；参考图、参考视频、参考音频分别通过 `referenceImages`、`referenceVideos`、`referenceAudios` 传入。 |
+| `doubao-seedance-2-0-260128` | Seedance 2.0 | Seedance 2.0 标准档位；支持 JSON URL 字段。 |
+| `doubao-seedance-2-0-fast-260128` | Seedance 2.0 | Seedance 2.0 fast 档位；适合更快提交的视频任务。 |
+| `doubao-seedance-1-5-pro_480p` | Seedance 1.5 | Seedance 1.5 480p；multipart 请求；`seconds` 范围 `4` 到 `11`；首尾帧图片 URL 使用 `first_frame_image` / `last_frame_image` 传入。 |
+| `doubao-seedance-1-5-pro_720p` | Seedance 1.5 | Seedance 1.5 720p；multipart 请求；`size` 传宽高比。 |
+| `doubao-seedance-1-5-pro_1080p` | Seedance 1.5 | Seedance 1.5 1080p；multipart 请求；适合需要更高清晰度的任务。 |
+| `wan2.6-t2v:1280*720` | 阿里 wan2.6 | 阿里万象 wan2.6 文生视频；常见字段 `prompt` / `size` / `seconds`；该条目对应 `1280*720` 低价档位。 |
+| `wan2.6-t2v:1920*1080` | 阿里 wan2.6 | 阿里万象 wan2.6 文生视频；常见字段 `prompt` / `size` / `seconds`；该条目对应 `1920*1080` 高价档位。 |
+| `wan2.6-i2v:1280*720` | 阿里 wan2.6 | 阿里万象 wan2.6 图生视频；常见字段 `prompt` / `size` / `seconds`；支持首帧生视频；该条目对应 `1280*720` 低价档位。 |
+| `wan2.6-i2v:1920*1080` | 阿里 wan2.6 | 阿里万象 wan2.6 图生视频；常见字段 `prompt` / `size` / `seconds`；支持首帧生视频；该条目对应 `1920*1080` 高价档位。 |
+| `Vidu-q3-pro` | 国产视频模型 | Vidu q3-pro（基础模型）。 |
+| `Vidu-q3-turbo` | 国产视频模型 | Vidu q3-turbo（基础模型）。 |
+| `Kling-3.0` | 国产视频模型 | 可灵 3.0（基础模型）。 |
+| `Kling-3.0-Omni` | 国产视频模型 | 可灵 3.0 Omni（基础模型）。 |
+| `omni-fast` | Omni | 文生视频、首帧图生视频、首尾帧和多参考图视频；JSON 请求；参考图最多 5 张；时长 4 到 30 秒。 |
+| `omni-fast-v2v` | Omni | 在 `omni-fast` 基础上额外支持参考视频编辑或延长；参考视频字段为 `video` / `video_url` / `input_video`，最大 15MB。 |
+| `grok-imagine-video` | Grok Imagine | Grok Imagine Video；JSON 请求；单图传 `image`，多图传 `images`；`resolution` 支持 `480P` / `720P`；`prompt` 最多 `4096` 个字符。 |
+| `grok-imagine-video-1.5-preview` | Grok Imagine | Grok Imagine 1.5 Preview；JSON 请求；使用单图 `image`；`resolution` 支持 `480P` / `720P` / `1080P`；`prompt` 最多 `4096` 个字符。 |
+| `minimax-h3` | MiniMax H3 | 前端单入口；按 `resolution`、`video_resolution` 或 `size` 分流到普通档 `minimax-h3-768p` 或 `minimax-h3-2k`；未明确选择时默认 768P，不自动选择 Pro。 |
+| `minimax-h3-768p` | MiniMax H3 | 普通 768P 模型；全能参考 `503`；`duration` 支持 `4` 到 `15` 秒；适合草稿、批量和常规清晰度任务。 |
+| `minimax-h3-2k` | MiniMax H3 | 普通 2K 模型；全能参考 `503`；参数与 `minimax-h3-768p` 一致；适合高清成片、大屏展示和后期裁切。 |
+| `minimax-h3-pro-768p` | MiniMax H3 | Pro 768P 模型；全能参考 `913`；支持 `referenceVideos` 传 1 段 2 到 5 秒参考视频，可叠加参考图、参考音频和首尾帧。 |
+| `minimax-h3-pro-2k` | MiniMax H3 | Pro 2K 模型；全能参考 `913`；同 `minimax-h3-pro-768p`，用于参考视频驱动且需要 2K 超清输出的任务。 |
+| `Hailuo-2.3` | 国产视频模型 | 海螺 2.3（基础模型）。 |
+| `Hailuo-2.3-fast` | 国产视频模型 | 海螺 2.3 fast（基础模型）。 |
+
+## 推荐阅读
+
+1. [Grok 视频概览](/api-reference/videos/grok/overview)
+2. [MiniMax H3 视频概览](/api-reference/videos/minimax-h3/overview)
+3. [manxue-2.5 视频概览](/api-reference/videos/manxue-2.5/overview)
+4. [Omni 视频模型概览](/api-reference/videos/omni/overview)
+5. [Veo 视频概览](/api-reference/videos/veo/overview)
+6. 如果你要做图生视频，先确认目标模型需要的是 `image`、`images`、`input_reference`、`referenceImages` 还是 `first_frame_image` / `last_frame_image`。
+7. 如果你明确是 Kling 官方格式接入，再看 `/kling/v1/videos/*` 这一组路由。

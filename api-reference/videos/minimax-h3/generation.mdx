@@ -1,0 +1,348 @@
+---
+title: MiniMax H3 视频生成
+description: 使用 `POST /v1/videos` 调用 MiniMax H3 普通档或 Pro 参考视频档提交视频生成任务。
+api: "POST /v1/videos"
+---
+
+# MiniMax H3 视频生成
+
+MiniMax H3 系列通过 `POST /v1/videos` 提交异步任务。当前文档把普通档和 Pro 参考视频档放在同一个 H3 系列中说明，不单开 Pro 系列。
+
+选择模型时先看是否需要参考视频：普通档是 `503`，不支持参考视频；Pro 档是 `913`，支持 1 段 2 到 5 秒参考视频。然后再选择 `768P` 或 `2K` 清晰度。
+
+## 模型选择
+
+| 传入 `model` | 实际模型 | 清晰度 | 全能参考 | 什么时候用 |
+| --- | --- | --- | --- | --- |
+| `minimax-h3-768p` | `minimax-h3-768p` | 768P | `503` | 默认档，适合草稿、批量、移动端和常规清晰度任务 |
+| `minimax-h3-2k` | `minimax-h3-2k` | 2K | `503` | 高清成片、大屏展示、细节保留、后期裁切 |
+| `minimax-h3-pro-768p` | `minimax-h3-pro-768p` | 768P | `913` | 基础能力加参考视频，适合用关键片段控制动作、镜头运动或主体状态 |
+| `minimax-h3-pro-2k` | `minimax-h3-pro-2k` | 2K | `913` | 同上，2K 超清输出 |
+| `minimax-h3` + `resolution: "768P"` | `minimax-h3-768p` | 768P | `503` | 前端单入口的 768P 写法，只分流到普通档 |
+| `minimax-h3` + `resolution: "2K"` | `minimax-h3-2k` | 2K | `503` | 前端单入口的 2K 写法，只分流到普通档 |
+
+所有 H3 模型都按输出秒数统计用量，失败任务不计入成功用量。`duration` 是用量统计的关键字段，接入方需要保证模型名、清晰度和参考素材能力一致。
+
+## 生成能力
+
+| 能力 | 字段 | 普通档 | Pro 档 | 规则 |
+| --- | --- | --- | --- | --- |
+| 文生视频 | `prompt` | 支持 | 支持 | 只传文本即可 |
+| 图生视频 / 多参考图 | `referenceImages` | 最多 5 张 | 最多 9 张 | 可传公网 URL 或 `data:image/...;base64,...` |
+| 首尾帧 | `first_image`、`last_image` | 支持 | 支持 | 通常成对使用；不要和 `referenceImages` 混用 |
+| 参考音频 | `referenceAudios` | 最多 3 段 | 最多 3 段 | 合计建议不超过 15 秒；当前插件适配层要求搭配至少 1 张 `referenceImages` |
+| 参考视频 | `referenceVideos` | 不支持 | 最多 1 段 | 时长 2 到 5 秒；请上传需要控制的关键片段，可叠加参考图、参考音频、首尾帧 |
+
+`duration` 支持 `4` 到 `15` 秒，必须是整数秒。`ratio` 支持 `16:9`、`9:16`、`1:1`、`21:9`、`4:3`、`3:4`。
+
+## 方法与路径
+
+```http
+POST /v1/videos
+```
+
+## 请求示例
+
+<RequestExample>
+
+```bash 2K 文生视频 cURL
+curl -X POST https://magic666.top/v1/videos \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "minimax-h3-2k",
+    "prompt": "清晨的海边，金色阳光穿过薄雾，浪花缓慢推向沙滩，电影感航拍镜头",
+    "duration": 6,
+    "ratio": "16:9"
+  }'
+```
+
+```bash 768P 图生视频 cURL
+curl -X POST https://magic666.top/v1/videos \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "minimax-h3-768p",
+    "prompt": "让参考图中的人物自然转身并微笑，背景保持柔和景深，镜头缓慢推近",
+    "duration": 6,
+    "ratio": "9:16",
+    "referenceImages": [
+      "https://example.com/assets/portrait.png"
+    ]
+  }'
+```
+
+```bash 前端单入口 cURL
+curl -X POST https://magic666.top/v1/videos \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "minimax-h3",
+    "prompt": "夜晚城市天台，人物向远处霓虹灯走去，轻微手持摄影，真实电影质感",
+    "duration": 8,
+    "ratio": "16:9",
+    "resolution": "2K"
+  }'
+```
+
+```bash 首尾帧 cURL
+curl -X POST https://magic666.top/v1/videos \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "minimax-h3-2k",
+    "prompt": "从首帧自然过渡到尾帧，保持人物服装和场景一致，动作平滑连贯",
+    "duration": 10,
+    "ratio": "16:9",
+    "first_image": "https://example.com/assets/start.png",
+    "last_image": "https://example.com/assets/end.png"
+  }'
+```
+
+```bash 参考图加参考音频 cURL
+curl -X POST https://magic666.top/v1/videos \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "minimax-h3-768p",
+    "prompt": "参考人物外观和音频情绪，生成一段自然说话的近景镜头",
+    "duration": 8,
+    "ratio": "16:9",
+    "referenceImages": [
+      "https://example.com/assets/speaker.png"
+    ],
+    "referenceAudios": [
+      "https://example.com/assets/voice.mp3"
+    ]
+  }'
+```
+
+```bash Pro 参考视频 cURL
+curl -X POST https://magic666.top/v1/videos \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "minimax-h3-pro-768p",
+    "prompt": "参考视频中的动作节奏和镜头运动，保持主体服装与参考图一致，生成自然连贯的产品展示短片",
+    "duration": 8,
+    "ratio": "16:9",
+    "referenceVideos": [
+      "https://example.com/assets/key-motion-4s.mp4"
+    ],
+    "referenceImages": [
+      "https://example.com/assets/product.png"
+    ],
+    "referenceAudios": [
+      "https://example.com/assets/music.mp3"
+    ]
+  }'
+```
+
+```python Python
+import requests
+
+resp = requests.post(
+    "https://magic666.top/v1/videos",
+    headers={
+        "Authorization": "Bearer YOUR_API_KEY",
+        "Content-Type": "application/json",
+    },
+    json={
+        "model": "minimax-h3-2k",
+        "prompt": "清晨的海边，金色阳光穿过薄雾，浪花缓慢推向沙滩，电影感航拍镜头",
+        "duration": 6,
+        "ratio": "16:9",
+    },
+    timeout=120,
+)
+
+print(resp.json())
+```
+
+```javascript JavaScript
+const response = await fetch("https://magic666.top/v1/videos", {
+  method: "POST",
+  headers: {
+    Authorization: "Bearer YOUR_API_KEY",
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    model: "minimax-h3-2k",
+    prompt: "清晨的海边，金色阳光穿过薄雾，浪花缓慢推向沙滩，电影感航拍镜头",
+    duration: 6,
+    ratio: "16:9",
+  }),
+});
+
+console.log(await response.json());
+```
+
+</RequestExample>
+
+## 响应示例
+
+<ResponseExample>
+
+```json 200 - 提交成功
+{
+  "id": "video_abc123",
+  "task_id": "video_abc123",
+  "object": "video",
+  "model": "minimax-h3-pro-2k",
+  "status": "queued",
+  "progress": 0,
+  "created_at": 1735689600,
+  "video_url": ""
+}
+```
+
+```json 400 - 参数错误
+{
+  "error": {
+    "message": "prompt is required",
+    "type": "invalid_request_error",
+    "param": "prompt",
+    "code": "invalid_request_error"
+  }
+}
+```
+
+```json 401 - 认证失败
+{
+  "error": {
+    "message": "invalid token",
+    "type": "invalid_request_error",
+    "code": "invalid_api_key"
+  }
+}
+```
+
+```json 402 - 额度不足
+{
+  "error": {
+    "message": "insufficient quota",
+    "type": "insufficient_quota",
+    "code": "insufficient_quota"
+  }
+}
+```
+
+```json 429 - 请求过多
+{
+  "error": {
+    "message": "rate limit exceeded",
+    "type": "rate_limit_error",
+    "code": "rate_limit_exceeded"
+  }
+}
+```
+
+</ResponseExample>
+
+## 认证
+
+使用 Bearer Token 鉴权：
+
+```http
+Authorization: Bearer YOUR_API_KEY
+```
+
+JSON 请求还需要携带：
+
+```http
+Content-Type: application/json
+```
+
+## Body
+
+<ParamField body="model" type="string" required>
+模型名称。推荐直接传真实模型：`minimax-h3-768p`、`minimax-h3-2k`、`minimax-h3-pro-768p` 或 `minimax-h3-pro-2k`。
+
+也兼容传前端单入口 `minimax-h3`。此时适配层会读取 `resolution`、`video_resolution` 或 `size`：值为 `2K` 或包含 `2160` 时分流到 `minimax-h3-2k`，其他情况分流到 `minimax-h3-768p`。`minimax-h3` 不会自动分流到 Pro 档。
+</ParamField>
+
+<ParamField body="prompt" type="string" required>
+视频生成提示词。建议控制在 `7000` 字符以内，并明确主体、动作、镜头、风格和画面节奏。
+</ParamField>
+
+<ParamField body="duration" type="integer" required>
+输出视频时长，单位为秒。支持 `4` 到 `15` 的整数值。按秒计费时，用量按输出秒数计算。
+</ParamField>
+
+<ParamField body="ratio" type="string">
+画幅比例。当前项目支持 `16:9`、`9:16`、`1:1`、`21:9`、`4:3`、`3:4`。未传或传入不支持的值时，适配层会回退为 `16:9`。
+</ParamField>
+
+<ParamField body="resolution" type="string">
+单入口 `minimax-h3` 的清晰度选择。支持 `768P` 和 `2K`。包含 `2k` 或 `2160` 的值会映射为 `2K`，其他值默认按 `768P` 处理。
+
+如果 `model` 已经是具体模型名，不需要再传这个字段；实际模型以 `model` 为准。
+</ParamField>
+
+<ParamField body="video_resolution" type="string">
+`resolution` 的兼容字段，规则相同。
+</ParamField>
+
+<ParamField body="size" type="string">
+`resolution` 的兼容字段。插件前端会把清晰度选择保存到 `size`，并同步保存到 `resolution` 和 `video_resolution`。
+</ParamField>
+
+<ParamField body="referenceImages" type="array<string>">
+参考图数组。普通档最多 5 张，Pro 档最多 9 张。成员可以是公网图片 URL，也可以是 `data:image/...;base64,...`。本地路径不能直接作为 API 输入，客户端需要先转为公网 URL 或 data URI。
+</ParamField>
+
+<ParamField body="first_image" type="string">
+首帧图。支持公网图片 URL 或 data URI。用于首尾帧模式时，不要同时传 `referenceImages`。
+</ParamField>
+
+<ParamField body="last_image" type="string">
+尾帧图。支持公网图片 URL 或 data URI。通常和 `first_image` 成对使用。
+</ParamField>
+
+<ParamField body="referenceAudios" type="array<string>">
+参考音频数组，最多 3 段，合计建议不超过 15 秒。当前插件适配层仅保留 `http://` 或 `https://` 公网 URL，并要求同时存在至少 1 张 `referenceImages`。
+</ParamField>
+
+<ParamField body="referenceVideos" type="array<string>">
+参考视频数组，仅 `minimax-h3-pro-768p` 和 `minimax-h3-pro-2k` 支持。最多 1 段，时长 2 到 5 秒。请上传需要控制的关键片段，并传入公网可访问的 MP4 URL；可叠加 `referenceImages`、`referenceAudios`、`first_image` 和 `last_image`。
+</ParamField>
+
+## 请求构造规则
+
+| 场景 | 字段组合 |
+| --- | --- |
+| 文生视频 | `model`、`prompt`、`duration`、`ratio` |
+| 单图生视频 | 文生字段加 `referenceImages: ["..."]` |
+| 多参考图 | 文生字段加 `referenceImages`；普通档最多 5 张，Pro 档最多 9 张 |
+| 首尾帧 | 文生字段加 `first_image`、`last_image` |
+| 参考音频 | 文生字段加 `referenceImages` 和 `referenceAudios` |
+| Pro 参考视频 | 文生字段加 `referenceVideos`，模型必须是 `minimax-h3-pro-768p` 或 `minimax-h3-pro-2k` |
+
+## 模型分流规则
+
+| 请求写法 | 结果 |
+| --- | --- |
+| `model: "minimax-h3-768p"` | 固定使用普通 768P 模型，参考规格 `503` |
+| `model: "minimax-h3-2k"` | 固定使用普通 2K 模型，参考规格 `503` |
+| `model: "minimax-h3-pro-768p"` | 固定使用 Pro 768P 模型，参考规格 `913` |
+| `model: "minimax-h3-pro-2k"` | 固定使用 Pro 2K 模型，参考规格 `913` |
+| `model: "minimax-h3"`，且 `resolution` / `video_resolution` / `size` 是 `2K` 或包含 `2160` | 分流到 `minimax-h3-2k` |
+| `model: "minimax-h3"`，未传清晰度或清晰度不是 2K | 分流到 `minimax-h3-768p` |
+| `model: "minimax-h3"` 且传入 `referenceVideos` | 仍然只按清晰度分流普通档；需要参考视频时应直接传 Pro 模型名 |
+
+## 注意事项
+
+- `minimax-h3` 是当前插件的前端单入口值，不是最终模型名；直接接入 API 时建议传四个真实模型之一。
+- 普通档和 Pro 档的能力差异是参考视频；`768P` 与 `2K` 的差异是输出清晰度。
+- 普通档参考规格是 `503`：最多 5 张参考图、0 段参考视频、3 段参考音频。
+- Pro 档参考规格是 `913`：最多 9 张参考图、1 段参考视频、3 段参考音频。参考视频放在 `referenceVideos`，建议只上传 2 到 5 秒关键片段。
+- 当前项目 H3 适配层不透出 `adaptive` 画幅；如果传入不支持的比例，会回退为 `16:9`。
+- 2K 和参考视频任务可能更慢，高峰期偶发排队；任务失败后可重新提交。
+- `first_image` / `last_image` 与 `referenceImages` 不要混用，避免上游把生成模式判定错。
+- 如需核对用量或账户信息，请以账户后台和相关查询接口为准。
+
+## 相关接口
+
+- [MiniMax H3 视频概览](./overview)
+- [MiniMax H3 查询视频任务](./query)
+- [视频模型支持矩阵](/api-reference/videos/model-matrix)
